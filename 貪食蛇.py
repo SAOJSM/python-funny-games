@@ -1,99 +1,119 @@
 import pygame
+import sys
+import time
 import random
+from pygame.locals import *
 
-# 遊戲窗口和背景設置
-window_width = 800
-window_height = 600
-background_color = (0, 0, 0)
+# 定義顏色變量
+redColour = pygame.Color(255, 46, 10)
+blackColour = pygame.Color(0, 0, 16)
+whiteColour = pygame.Color(255, 255, 255)
+greyColour = pygame.Color(150, 150, 150)
 
-# 貪吃蛇和食物的屬性設置
-snake_size = 20
-snake_color = (0, 255, 0)
-food_color = (255, 0, 0)
+# 定義gameOver函數
+def gameOver(playSurface):
+    gameOverFont = pygame.font.Font(None, 72)
+    gameOverSurf = gameOverFont.render('Game Over', True, greyColour)
+    gameOverRect = gameOverSurf.get_rect()
+    gameOverRect.midtop = (320, 10)
+    playSurface.blit(gameOverSurf, gameOverRect)
+    pygame.display.flip()
+    time.sleep(5)
+    pygame.quit()
+    sys.exit()
 
-# 初始化遊戲
-pygame.init()
-window = pygame.display.set_mode((window_width, window_height))
-pygame.display.set_caption('貪吃蛇遊戲')
-
-# 貪吃蛇類
-class Snake:
-    def __init__(self):
-        self.length = 1
-        self.positions = [((window_width / 2), (window_height / 2))]
-        self.direction = random.choice([pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT])
-        self.color = snake_color
-
-    def get_head_position(self):
-        return self.positions[0]
-
-    def move(self):
-        cur = self.get_head_position()
-        x, y = self.direction
-
-        new = (((cur[0] + (x * snake_size)) % window_width), (cur[1] + (y * snake_size)) % window_height)
-        if len(self.positions) > 2 and new in self.positions[2:]:
-            self.reset()
-        else:
-            self.positions.insert(0, new)
-            if len(self.positions) > self.length:
-                self.positions.pop()
-
-    def reset(self):
-        self.length = 1
-        self.positions = [((window_width / 2), (window_height / 2))]
-        self.direction = random.choice([pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT])
-
-    def draw(self, surface):
-        for p in self.positions:
-            pygame.draw.rect(surface, self.color, (p[0], p[1], snake_size, snake_size))
-
-# 食物類
-class Food:
-    def __init__(self):
-        self.position = (0, 0)
-        self.color = food_color
-        self.randomize_position()
-
-    def randomize_position(self):
-        self.position = (random.randint(0, window_width // snake_size - 1) * snake_size,
-                         random.randint(0, window_height // snake_size - 1) * snake_size)
-
-    def draw(self, surface):
-        pygame.draw.rect(surface, self.color, (self.position[0], self.position[1], snake_size, snake_size))
-
-# 遊戲主循環
+# 定義main函數
 def main():
-    clock = pygame.time.Clock()
-    is_running = True
-    snake = Snake()
-    food = Food()
+    # 初始化pygame
+    pygame.init()
+    fpsClock = pygame.time.Clock()
 
-    while is_running:
+    # 創建pygame顯示層
+    playSurface = pygame.display.set_mode((640, 480))
+    pygame.display.set_caption('Raspberry Snake')
+
+    # 初始化變量
+    snakePosition = [100, 100]
+    snakeSegments = [[100, 100], [80, 100], [60, 100]]
+    raspberryPosition = [300, 300]
+    raspberrySpawned = 1
+    direction = 'right'
+    changeDirection = direction
+
+    while True:
+        # 檢測例如按鍵等pygame事件
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == QUIT:
                 pygame.quit()
-                quit()
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP and snake.direction != (0, 1):
-                    snake.direction = (0, -1)
-                elif event.key == pygame.K_DOWN and snake.direction != (0, -1):
-                    snake.direction = (0, 1)
-                elif event.key == pygame.K_LEFT and snake.direction != (1, 0):
-                    snake.direction = (-1, 0)
-                elif event.key == pygame.K_RIGHT and snake.direction != (-1, 0):
-                    snake.direction = (1, 0)
+                sys.exit()
+            elif event.type == KEYDOWN:
+                if event.key == K_RIGHT or event.key == ord('d'):
+                    changeDirection = 'right'
+                if event.key == K_LEFT or event.key == ord('a'):
+                    changeDirection = 'left'
+                if event.key == K_UP or event.key == ord('w'):
+                    changeDirection = 'up'
+                if event.key == K_DOWN or event.key == ord('s'):
+                    changeDirection = 'down'
+                if event.key == K_ESCAPE:
+                    pygame.event.post(pygame.event.Event(QUIT))
 
-        snake.move()
-        if snake.get_head_position() == food.position:
-            snake.length += 1
-            food.randomize_position()
+        # 判斷是否輸入了反方向
+        if changeDirection == 'right' and not direction == 'left':
+            direction = changeDirection
+        if changeDirection == 'left' and not direction == 'right':
+            direction = changeDirection
+        if changeDirection == 'up' and not direction == 'down':
+            direction = changeDirection
+        if changeDirection == 'down' and not direction == 'up':
+            direction = changeDirection
 
-        window.fill(background_color)
-        snake.draw(window)
-        food.draw(window)
-        pygame.display.update()
-        clock.tick(10)
+        # 根據方向移動蛇頭的坐標
+        if direction == 'right':
+            snakePosition[0] += 20
+        if direction == 'left':
+            snakePosition[0] -= 20
+        if direction == 'up':
+            snakePosition[1] -= 20
+        if direction == 'down':
+            snakePosition[1] += 20
 
-if __name__ == '__main__':
+        # 增加蛇的長度
+        snakeSegments.insert(0, list(snakePosition))
+
+        # 判斷是否吃掉了樹莓
+        if snakePosition[0] == raspberryPosition[0] and snakePosition[1] == raspberryPosition[1]:
+            raspberrySpawned = 0
+        else:
+            snakeSegments.pop()
+
+        # 如果吃掉樹莓，則重新生成樹莓
+        if raspberrySpawned == 0:
+            x = random.randrange(1, 32)
+            y = random.randrange(1, 24)
+            raspberryPosition = [int(x * 20), int(y * 20)]
+            raspberrySpawned = 1
+
+        # 繪製pygame顯示層
+        playSurface.fill(blackColour)
+        for position in snakeSegments:
+            pygame.draw.rect(playSurface, whiteColour, Rect(position[0], position[1], 20, 20))
+        pygame.draw.rect(playSurface, redColour, Rect(raspberryPosition[0], raspberryPosition[1], 20, 20))
+
+        # 刷新pygame顯示層
+        pygame.display.flip()
+
+        # 判斷是否死亡
+        if snakePosition[0] > 620 or snakePosition[0] < 0:
+            gameOver(playSurface)
+        if snakePosition[1] > 460 or snakePosition[1] < 0:
+            gameOver(playSurface)
+        for snakeBody in snakeSegments[1:]:
+            if snakePosition[0] == snakeBody[0] and snakePosition[1] == snakeBody[1]:
+                gameOver(playSurface)
+
+        # 控制遊戲速度
+        fpsClock.tick(10)
+
+if __name__ == "__main__":
     main()
