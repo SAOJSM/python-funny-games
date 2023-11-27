@@ -1,30 +1,75 @@
-def next_turn(self, btn):
-    if btn["text"] == " ":
-        btn["text"] = self.player
-        if self.player == "X":
-            self.player = "O"
-        else:
-            self.player = "X"
-        self.info["text"] = "輪到玩家{}".format(self.player)
-        self.check_win()
-    else:
-        pass # 按鈕已被佔用,不處理
+import tkinter as tk
 
-def check_win(self):
-    # 檢查所有可能的勝利條件
-    for a, b, c in [[0, 1, 2], [3, 4, 5], [6, 7, 8],
-                   [0, 3, 6], [1, 4, 7], [2, 5, 8],
-                   [0, 4, 8], [2, 4, 6]]:
-        if self.buttons[a]["text"] == self.buttons[b]["text"] == self.buttons[c]["text"] != " ":
-            self.disable_all_buttons()
-            self.info["text"] = "玩家{}獲勝!".format(self.player)
-            return True
-    if all([btn["text"] != " " for btn in self.buttons]): 
-        # 平局判定
-        self.info["text"] = "平手!"
-        return "Draw"
-    return False
-
-def disable_all_buttons(self):
-    for btn in self.buttons:
-        btn["state"] = "disabled"
+class TicTacToe:
+    def __init__(self):
+        self.window = tk.Tk()
+        self.window.title("Tic Tac Toe")
+        
+        self.player = "X"
+        self.buttons = {}
+        self.init_gui()
+        
+    def init_gui(self):
+        for i in range(3):
+            for j in range(3):
+                btn = tk.Button(self.window, text=" ", font=("Helvetica", 20), height=2, width=4, 
+                        command=lambda row=i, col=j: self.next_turn(self.buttons[(row, col)]))
+                btn.grid(row=i, column=j)
+                self.buttons[(i,j)] = btn
+        
+        self.info = tk.Label(text="玩家X先手", font=("Helvetica", 12)) 
+        self.info.grid(row=3, column=0, columnspan=3)
+        
+    def next_turn(self, btn):
+        if btn["text"] == " ":
+            btn["text"] = self.player
+            if self.player == "X":
+                self.player = "O" 
+            else:
+                self.player = "X"
+                
+            self.info["text"] = "輪到玩家{}".format(self.player)  
+            
+            if self.check_win():
+                return
+        
+        elif all([btn["text"] != " " for btn in self.buttons.values()]): 
+            self.info["text"] = "平手"
+            self.disable_buttons() 
+        
+        self.check_draw()
+            
+    def check_win(self):
+        # winning combinations
+        combos = [[(0,0), (0,1), (0,2)], 
+                  [(1,0), (1,1), (1,2)], 
+                  [(2,0), (2,1), (2,2)], 
+    
+                  [(0,0), (1,0), (2,0)], 
+                  [(0,1), (1,1), (2,1)],
+                  [(0,2), (1,2), (2,2)],
+    
+                  [(0,0), (1,1), (2,2)],
+                  [(2,0), (1,1), (0,2)]]
+        
+        for combo in combos:
+            texts = [self.buttons[pos]["text"] for pos in combo]
+            if texts.count(texts[0]) == 3 and texts[0] != " ":
+                self.info["text"] = "玩家{}獲勝!".format(self.player)
+                self.disable_buttons()
+                return True
+            
+        return False
+    
+    def check_draw(self):
+        if all([btn["text"] != " " for btn in self.buttons.values()]):
+            self.info["text"] = "平手"  
+            self.disable_buttons()   
+            
+    def disable_buttons(self):
+        for btn in self.buttons.values():
+            btn["state"] = "disabled"
+            
+if __name__ == "__main__":
+    game = TicTacToe()  
+    game.window.mainloop()
