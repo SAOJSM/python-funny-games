@@ -66,13 +66,13 @@ while running:
             player_position.x += player_speed
 
         # 移動敵方坦克
-        if enemy_position.centery < player_position.centery:
+        if enemy_position.centery < flag_position.centery:
             enemy_position.y += enemy_speed
-        elif enemy_position.centery > player_position.centery:
+        elif enemy_position.centery > flag_position.centery:
             enemy_position.y -= enemy_speed
-        if enemy_position.centerx < player_position.centerx:
+        if enemy_position.centerx < flag_position.centerx:
             enemy_position.x += enemy_speed
-        elif enemy_position.centerx > player_position.centerx:
+        elif enemy_position.centerx > flag_position.centerx:
             enemy_position.x -= enemy_speed
 
         # 檢查是否搶到旗幟
