@@ -1,43 +1,41 @@
-# Start Generation Here
 import pygame
 import random
 
-# 初始化pygame
+# Initialize pygame
 pygame.init()
 
-# 設定畫面大小
+# Set up display
 width, height = 600, 400
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("貪食蛇遊戲")
 
-# 顏色設定
+# Define colors
 black = (0, 0, 0)
 red = (255, 0, 0)
 green = (0, 255, 0)
 
-# 蛇的初始設定
+# Snake settings
 snake_block = 10
-snake_speed = 15  # 設定移動速度
-snake_list = []
-length_of_snake = 1
+snake_speed = 15
 
-# 隨機生成紅點
+# Generate random food position
 def generate_food():
     return (random.randint(0, (width - snake_block) // snake_block) * snake_block,
             random.randint(0, (height - snake_block) // snake_block) * snake_block)
 
-food_position = generate_food()
-
-# 主遊戲循環
+# Main game loop
 def game_loop():
-    global food_position
     game_over = False
     game_close = False
 
-    x1 = width // 2
-    y1 = height // 2
-    x1_change = 0
-    y1_change = 0
+    x1, y1 = width // 2, height // 2
+    x1_change, y1_change = 0, 0
+
+    snake_list = []
+    length_of_snake = 1
+    food_position = generate_food()
+
+    clock = pygame.time.Clock()
 
     while not game_over:
         while game_close:
@@ -54,21 +52,22 @@ def game_loop():
                         game_close = False
                     if event.key == pygame.K_c:
                         game_loop()
+                        return
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 game_over = True
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT and x1_change == 0:
                     x1_change = -snake_block
                     y1_change = 0
-                elif event.key == pygame.K_RIGHT:
+                elif event.key == pygame.K_RIGHT and x1_change == 0:
                     x1_change = snake_block
                     y1_change = 0
-                elif event.key == pygame.K_UP:
+                elif event.key == pygame.K_UP and y1_change == 0:
                     y1_change = -snake_block
                     x1_change = 0
-                elif event.key == pygame.K_DOWN:
+                elif event.key == pygame.K_DOWN and y1_change == 0:
                     y1_change = snake_block
                     x1_change = 0
 
@@ -79,35 +78,34 @@ def game_loop():
         y1 += y1_change
         screen.fill(black)
 
-        # 畫紅點
+        # Draw food
         pygame.draw.rect(screen, red, [food_position[0], food_position[1], snake_block, snake_block])
 
-        # 更新蛇的身體
-        snake_head = []
-        snake_head.append(x1)
-        snake_head.append(y1)
+        # Update snake
+        snake_head = [x1, y1]
         snake_list.append(snake_head)
         if len(snake_list) > length_of_snake:
             del snake_list[0]
 
+        # Check for collisions with itself
         for segment in snake_list[:-1]:
             if segment == snake_head:
                 game_close = True
 
+        # Draw snake
         for segment in snake_list:
             pygame.draw.rect(screen, green, [segment[0], segment[1], snake_block, snake_block])
 
         pygame.display.update()
 
-        # 檢查是否吃到紅點
+        # Check if snake has eaten the food
         if x1 == food_position[0] and y1 == food_position[1]:
             food_position = generate_food()
             length_of_snake += 1
 
-        pygame.time.Clock().tick(snake_speed)
+        clock.tick(snake_speed)
 
     pygame.quit()
 
-# 開始遊戲
+# Start the game
 game_loop()
-# End Generation Here
